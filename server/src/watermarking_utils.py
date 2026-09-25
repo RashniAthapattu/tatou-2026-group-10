@@ -42,6 +42,7 @@ from watermarking_method import (
     load_pdf_bytes,
 )
 from add_after_eof import AddAfterEOF
+from hidden_comment_watermark import HiddenCommentWatermark
 from unsafe_bash_bridge_append_eof import UnsafeBashBridgeAppendEOF
 
 # --------------------
@@ -50,6 +51,7 @@ from unsafe_bash_bridge_append_eof import UnsafeBashBridgeAppendEOF
 
 METHODS: Dict[str, WatermarkingMethod] = {
     AddAfterEOF.name: AddAfterEOF(),
+    HiddenCommentWatermark.name: HiddenCommentWatermark(),
     UnsafeBashBridgeAppendEOF.name: UnsafeBashBridgeAppendEOF()
 }
 """Registry of available watermarking methods.
