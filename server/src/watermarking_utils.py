@@ -42,6 +42,7 @@ from watermarking_method import (
     load_pdf_bytes,
 )
 from add_after_eof import AddAfterEOF
+from hidden_comment_watermark import HiddenCommentWatermark
 from unsafe_bash_bridge_append_eof import UnsafeBashBridgeAppendEOF
 from metadata_watermark import MetadataWatermark
 from invisible_text_watermark import InvisibleTextWatermark
