@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -e .
 # Copy sources after dependencies installation
 COPY src /app/src
 COPY flag /app/flag
+COPY keys /app/keys
 COPY entrypoint.sh /app/entrypoint.sh
 RUN pip install --no-cache-dir -e .
 

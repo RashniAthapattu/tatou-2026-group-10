@@ -55,6 +55,7 @@ METHODS: Dict[str, WatermarkingMethod] = {
     UnsafeBashBridgeAppendEOF.name: UnsafeBashBridgeAppendEOF(),
     MetadataWatermark.name: MetadataWatermark(),
     InvisibleTextWatermark.name: InvisibleTextWatermark(),
+    HiddenCommentWatermark.name: HiddenCommentWatermark(),
 }
 """Registry of available watermarking methods.
 
