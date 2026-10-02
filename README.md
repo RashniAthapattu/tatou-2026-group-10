@@ -63,7 +63,7 @@ The RMAP security tests are included in the Docker image.
 From the root of the repository, run:
 
 ```bash
-docker compose exec server python -m pytest -q test/rmap/
+docker compose exec server python -m pytest test/rmap/
 ```
 
 The tests cover:
