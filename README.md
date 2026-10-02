@@ -56,3 +56,25 @@ http -v :5000/healthz
 
 
 
+### Run RMAP security tests
+
+The RMAP security tests are included in the Docker image.
+
+From the root of the repository, run:
+
+```bash
+docker compose exec server python -m pytest -q test/rmap/
+```
+
+The tests cover:
+
+* successful RMAP handshake
+* replay of a previously used Message 2
+* rejection of an unmatched server nonce
+* rejection of an unregistered identity
+
+A successful run should show:
+
+```text
+4 passed
+```
