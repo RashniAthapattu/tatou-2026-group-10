@@ -10,6 +10,8 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 
+from rmap import RMAPServer, RMAPError
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 
@@ -39,6 +41,20 @@ def create_app():
     app.config["DB_NAME"] = os.environ.get("DB_NAME", "tatou")
 
     app.config["STORAGE_DIR"].mkdir(parents=True, exist_ok=True)
+
+    keys_dir = Path(__file__).resolve().parent.parent / "keys"
+
+    rmap_server = RMAPServer(
+        server_public_key_path=keys_dir / "server_pub.asc",
+        server_private_key_path=keys_dir / "server_priv.asc",
+        passphrase=os.environ.get("RMAP_SERVER_PASSPHRASE") or None,
+        linkPrefix="",
+        verbose=False,
+    )
+
+    rmap_server.loadIdentities(keys_dir / "clients")
+
+    app.config["RMAP_SERVER"] = rmap_server
 
     # --- DB engine only (no Table metadata) ---
     def db_url() -> str:
@@ -809,6 +825,196 @@ def create_app():
             "method": method,
             "position": position
         }), 201
+    
+    @app.errorhandler(RMAPError)
+    def handle_rmap_error(e):
+        return jsonify({"error": str(e)}), 400
+
+    @app.post("/api/rmap-initiate")
+    def rmap_initiate():
+        msg1 = request.get_json(silent=True)
+
+        if not isinstance(msg1, dict):
+            return jsonify({"error": "JSON object required"}), 400
+
+        rmap_server = app.config["RMAP_SERVER"]
+
+        identity, response = rmap_server.receiveMsg1(msg1)
+
+        return jsonify(response)
+
+    @app.post("/api/rmap-get-link")
+    def rmap_get_link():
+        msg2 = request.get_json(silent=True)
+
+        if not isinstance(msg2, dict):
+            return jsonify({"error": "JSON object required"}), 400
+
+        rmap_server = app.config["RMAP_SERVER"]
+
+        identity, expected_link, response = rmap_server.receiveMsg2(msg2)
+
+        storage_root = Path(app.config["STORAGE_DIR"]).resolve()
+        source_path = storage_root / "rmap" / "Group_10.pdf"
+
+        try:
+            with get_engine().connect() as conn:
+                existing = conn.execute(
+                    text("""
+                        SELECT id, path
+                        FROM Versions
+                        WHERE link = :link
+                        LIMIT 1
+                    """),
+                    {"link": expected_link},
+                ).first()
+
+                if existing:
+                    return jsonify({
+                        "error": "RMAP Message 2 has already been used"
+                    }), 409
+
+                # Find the confidential source document registered for RMAP.
+                source_row = conn.execute(
+                    text("""
+                        SELECT id, name, path
+                        FROM Documents
+                        WHERE path = :path
+                        LIMIT 1
+                    """),
+                    {"path": str(source_path)},
+                ).first()
+
+        except Exception as e:
+            return jsonify({"error": f"database error: {e}"}), 503
+
+        if not source_row:
+            return jsonify({"error": "RMAP source document not found"}), 500
+
+        # Resolve the source path safely under STORAGE_DIR.
+        try:
+            source_file = _safe_resolve_under_storage(
+                source_row.path,
+                storage_root,
+            )
+        except RuntimeError:
+            return jsonify({"error": "RMAP source document path invalid"}), 500
+
+        if not source_file.exists():
+            return jsonify({"error": "RMAP source document missing"}), 500
+
+        method = "hidden-comment"
+        secret = identity
+        key = "rmap"
+        position = None
+
+        try:
+            applicable = WMUtils.is_watermarking_applicable(
+                method=method,
+                pdf=str(source_file),
+                position=position,
+            )
+
+            if applicable is False:
+                return jsonify({
+                    "error": "RMAP watermarking method not applicable"
+                }), 500
+
+            wm_bytes = WMUtils.apply_watermark(
+                method=method,
+                pdf=str(source_file),
+                secret=secret,
+                key=key,
+                position=position,
+            )
+
+            if not isinstance(wm_bytes, (bytes, bytearray)) or len(wm_bytes) == 0:
+                return jsonify({
+                    "error": "RMAP watermarking produced no output"
+                }), 500
+
+        except Exception as e:
+            return jsonify({
+                "error": f"RMAP watermarking failed: {e}"
+            }), 500
+
+        base_name = Path(source_row.name or source_file.name).stem
+        candidate = f"{base_name}__{expected_link}.pdf"
+
+        dest_dir = storage_root / "rmap" / "watermarks"
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        dest_path = dest_dir / candidate
+
+        try:
+            with dest_path.open("wb") as f:
+                f.write(wm_bytes)
+        except Exception as e:
+            return jsonify({
+                "error": f"failed to write RMAP watermarked file: {e}"
+            }), 500
+
+        try:
+            with get_engine().begin() as conn:
+                conn.execute(
+                    text("""
+                        INSERT INTO Versions
+                            (documentid, link, intended_for, secret,
+                            method, position, path)
+                        VALUES
+                            (:documentid, :link, :intended_for, :secret,
+                            :method, :position, :path)
+                    """),
+                    {
+                        "documentid": int(source_row.id),
+                        "link": expected_link,
+                        "intended_for": identity,
+                        "secret": secret,
+                        "method": method,
+                        "position": "",
+                        "path": str(dest_path),
+                    },
+                )
+
+                vid = int(
+                    conn.execute(
+                        text("SELECT LAST_INSERT_ID()")
+                    ).scalar()
+                )
+
+        except IntegrityError:
+            try:
+                with get_engine().connect() as conn:
+                    existing = conn.execute(
+                        text("""
+                            SELECT id
+                            FROM Versions
+                            WHERE link = :link
+                            LIMIT 1
+                        """),
+                        {"link": expected_link},
+                    ).first()
+
+                if not existing:
+                    dest_path.unlink(missing_ok=True)
+
+            except Exception:
+                pass
+
+            return jsonify({
+                "error": "RMAP link has already been used"
+            }), 409
+
+        except Exception as e:
+            try:
+                dest_path.unlink(missing_ok=True)
+            except Exception:
+                pass
+
+            return jsonify({
+                "error": f"database error during RMAP version insert: {e}"
+            }), 503
+
+        return jsonify(response), 200
 
     return app
     
