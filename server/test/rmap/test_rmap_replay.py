@@ -1,6 +1,4 @@
-import json
 import os
-import secrets
 
 from rmap import RMAPClient
 from server import app
@@ -24,6 +22,14 @@ def test_rmap_replay_of_message_2_is_rejected():
         json=msg1,
     )
 
+    print("\n=== FPT_RPL.1: Message 1 ===")
+    print("REQUEST:")
+    print("POST /api/rmap-initiate")
+    print("Encrypted JSON:", msg1)
+    print("RESPONSE:")
+    print("HTTP", response1.status_code)
+    print("JSON:", response1.get_json())
+
     assert response1.status_code == 200
     assert response1.is_json
 
@@ -37,10 +43,21 @@ def test_rmap_replay_of_message_2_is_rejected():
         json=msg2,
     )
 
+    print("\n=== FPT_RPL.1: Initial Message 2 ===")
+    print("REQUEST:")
+    print("POST /api/rmap-get-link")
+    print("Encrypted JSON:", msg2)
+    print("RESPONSE:")
+    print("HTTP", response2.status_code)
+    print("JSON:", response2.get_json())
+
     assert response2.status_code == 200
     assert response2.is_json
 
     link = rmap_client.process_resp2(response2.get_json())
+
+    print("Session link:", link)
+    print("Session link length:", len(link))
 
     assert isinstance(link, str)
     assert len(link) == 32
@@ -50,6 +67,14 @@ def test_rmap_replay_of_message_2_is_rejected():
         "/api/rmap-get-link",
         json=msg2,
     )
+
+    print("\n=== FPT_RPL.1: Replay of Identical Message 2 ===")
+    print("REQUEST:")
+    print("POST /api/rmap-get-link")
+    print("Encrypted JSON:", msg2)
+    print("RESPONSE:")
+    print("HTTP", replay_response.status_code)
+    print("JSON:", replay_response.get_json())
 
     assert replay_response.status_code == 409
     assert replay_response.is_json
