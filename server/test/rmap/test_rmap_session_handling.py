@@ -20,6 +20,15 @@ def test_rmap_rejects_unmatched_server_nonce():
         json=msg2,
     )
 
+    print("\n=== Session Handling: Unmatched Server Nonce ===")
+    print("REQUEST:")
+    print("POST /api/rmap-get-link")
+    print("nonceServer:", fake_nonce_server)
+    print("Encrypted JSON:", msg2)
+    print("RESPONSE:")
+    print("HTTP", response.status_code)
+    print("JSON:", response.get_json())
+
     assert response.status_code == 400
     assert response.is_json
 
