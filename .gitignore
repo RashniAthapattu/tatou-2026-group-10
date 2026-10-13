@@ -209,3 +209,7 @@ __marimo__/
 #being careful not to commit private key or the pdf
 server/keys/server_priv.asc
 storage
+
+#mutatnt stuff
+mutants/
+.mutmut-cache
