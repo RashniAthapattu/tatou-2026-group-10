@@ -1,0 +1,62 @@
+name: Mutation testing
+
+on:
+  pull_request:
+    paths:
+      - "server/**"
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+  workflow_dispatch:
+
+jobs:
+  mutmut:
+    name: mutmut on watermarking modules
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install \
+            "PyMuPDF>=1.21.1" "Flask==3.0.3" "PyMySQL==1.1.2" \
+            "SQLAlchemy==2.0.43" "dill==0.4.0" "cryptography>=41.0.0" \
+            "rmap @ https://github.com/nharrand/RMAP/releases/download/v2.0.0/rmap-2.0.0-py3-none-any.whl" \
+            "pytest>=7.0.0" "mutmut==3.8.0"
+
+      - name: Run mutation-selection tests
+        run: python -m pytest test/mutation -o addopts="" -q
+
+      - name: Run mutmut
+        run: |
+          rm -rf mutants .mutmut-cache
+          mutmut run
+          mutmut results > mutmut-results.txt
+
+      - name: Summarise survivors
+        run: |
+          {
+            echo "### mutmut survivors"
+            echo ""
+            echo "Survived: $(grep -c ': survived' mutmut-results.txt || true)"
+            echo ""
+            echo '```'
+            grep ': survived' mutmut-results.txt || echo "none"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mutmut-results
+          path: server/mutmut-results.txt
