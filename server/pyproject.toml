@@ -22,6 +22,22 @@ dev = [
 addopts = "-q"
 testpaths = ["test/"]
 python_files = ["test_*.py"]
+pythonpath = ["src"]
 
 [project.scripts]
 pdfwm = "watermarking_cli:main"                 # now you can run `pdfwm methods`
+
+[tool.mutmut]
+source_paths = [
+    "src/add_after_eof.py",
+    "src/hidden_comment_watermark.py",
+    "src/metadata_watermark.py",
+    "src/invisible_text_watermark.py",
+]
+also_copy = [
+	"src/watermarking_utils.py",
+	"src/watermarking_method.py",
+	"src/unsafe_bash_bridge_append_eof.py",
+]
+pytest_add_cli_args_test_selection = ["test/mutation/"]
+on_dependency_change = "rerun"
