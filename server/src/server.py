@@ -28,6 +28,9 @@ from watermarking_method import WatermarkingMethod
 
 def create_app():
     app = Flask(__name__)
+    failed_logins = {}
+    failed_login_window = 300
+    failed_login_limit = 3
 
     # --- Config ---
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -170,6 +173,20 @@ def create_app():
             return jsonify({"error": f"database error: {str(e)}"}), 503
 
         if not row or not check_password_hash(row.hpassword, password):
+            now = dt.datetime.now().timestamp()
+            attempts = failed_logins.get(email, [])
+            attempts = [t for t in attempts if now - t < failed_login_window]
+            attempts.append(now)
+            failed_logins[email] = attempts
+
+            app.logger.warning("Failed login attempt for email: %s", email)
+
+            if len(attempts) == failed_login_limit:
+                app.logger.warning(
+                    "Repeated failed logins detected for email: %s (%s attempts in 5 minutes)",
+                    email,
+                    len(attempts),
+                )
             return jsonify({"error": "invalid credentials"}), 401
 
         token = _serializer().dumps({"uid": int(row.id), "login": row.login, "email": row.email})
@@ -458,28 +475,42 @@ def create_app():
         return fp
 
     # DELETE /api/delete-document  (and variants)
-    @app.route("/api/delete-document", methods=["DELETE", "POST"])  # POST supported for convenience
-    @app.route("/api/delete-document/<document_id>", methods=["DELETE"])
+    @app.route("/api/delete-document", methods=["DELETE", "POST"])
+    @app.route("/api/delete-document/<int:document_id>", methods=["DELETE"])
+    @require_auth
     def delete_document(document_id: int | None = None):
         # accept id from path, query (?id= / ?documentid=), or JSON body on POST
-        if not document_id:
+        if document_id is None:
             document_id = (
                 request.args.get("id")
                 or request.args.get("documentid")
-                or (request.is_json and (request.get_json(silent=True) or {}).get("id"))
+                or (request.is_json and
+                    (request.get_json(silent=True) or {}).get("id"))
             )
+
         try:
-            doc_id = document_id
+            doc_id = int(document_id) if document_id is not None else None
         except (TypeError, ValueError):
             return jsonify({"error": "document id required"}), 400
 
-        # Fetch the document (enforce ownership)
+        if doc_id is None or doc_id <= 0:
+            return jsonify({"error": "document id required"}), 400
+
+        # Fetch only a document owned by the authenticated user.
         try:
             with get_engine().connect() as conn:
-                query = "SELECT * FROM Documents WHERE id = " + doc_id
-                row = conn.execute(text(query)).first()
-        except Exception as e:
-            return jsonify({"error": f"database error: {str(e)}"}), 503
+                row = conn.execute(
+                    text("""
+                        SELECT *
+                        FROM Documents
+                        WHERE id = :id AND ownerid = :uid
+                        LIMIT 1
+                    """),
+                    {"id": doc_id, "uid": int(g.user["id"])},
+                ).first()
+        except Exception:
+            app.logger.exception("Document lookup failed")
+            return jsonify({"error": "database error"}), 503
 
         if not row:
             # Don’t reveal others’ docs—just say not found
@@ -512,7 +543,7 @@ def create_app():
                 # If your schema does NOT have ON DELETE CASCADE on Version.documentid,
                 # uncomment the next line first:
                 # conn.execute(text("DELETE FROM Version WHERE documentid = :id"), {"id": doc_id})
-                conn.execute(text("DELETE FROM Documents WHERE id = :id"), {"id": doc_id})
+                conn.execute(text("DELETE FROM Documents WHERE id = :id AND ownerid = :uid"), {"id": doc_id, "uid": int(g.user["id"])})
         except Exception as e:
             return jsonify({"error": f"database error during delete: {str(e)}"}), 503
 
