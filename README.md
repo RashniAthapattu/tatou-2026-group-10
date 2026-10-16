@@ -60,6 +60,18 @@ http -v :5000/healthz
 
 The RMAP security tests are included in the Docker image.
 
+Before testing, make sure the server's private key is in place and the passphrase is set:
+
+1. Copy the server private key to `server/keys/server_priv.asc`. Never commit this file; it is listed in `.gitignore`.
+2. Set `RMAP_SERVER_PASSPHRASE` in `.env` (copied from `sample.env`).
+3. Load the variables into your shell:
+
+```bash
+set -a
+source .env
+set +a
+```
+
 From the root of the repository, run:
 
 ```bash
@@ -78,3 +90,48 @@ A successful run should show:
 ```text
 4 passed
 ```
+### Mutation testing (Specialization B)
+
+Mutation testing checks whether the test suite notices small faults injected into the code. We use [mutmut](https://github.com/boxed/mutmut) to mutate the watermarking methods in `server/src/`, and run only the tests in `server/test/mutation/` against each mutant.
+
+mutmut reads its settings from `server/pyproject.toml`:
+
+```toml
+[tool.mutmut]
+source_paths = [
+    "src/add_after_eof.py",
+    "src/hidden_comment_watermark.py",
+    "src/metadata_watermark.py",
+    "src/invisible_text_watermark.py",
+]
+also_copy = [
+	"src/watermarking_utils.py",
+	"src/watermarking_method.py",
+	"src/unsafe_bash_bridge_append_eof.py",
+]
+pytest_add_cli_args_test_selection = ["test/mutation/"]
+on_dependency_change = "rerun"
+```
+
+Run it inside the server container, or in the same virtual environment used for the unit tests:
+
+```bash
+cd tatou/server
+
+# Install mutmut in the active environment
+python -m pip install mutmut
+
+# Confirm the mutation tests pass on the unmodified code first
+python -m pytest test/mutation/
+
+# Generate and run mutants against the watermarking methods
+python -m mutmut run
+
+# List the mutants that survived the tests
+python -m mutmut results
+
+# Show one surviving mutant as a diff
+python -m mutmut show <mutant-id>
+```
+
+A surviving mutant means no test failed when that line changed. Read each one and decide whether the tests need a stronger assertion, an edge case, or whether the mutant is equivalent to the original code.
