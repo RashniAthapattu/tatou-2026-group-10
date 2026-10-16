@@ -1,0 +1,55 @@
+........................................................................ [ 57%]
+.........x............................................                   [100%]
+=============================== warnings summary ===============================
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:5
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:5: DeprecationWarning: 'imghdr' is deprecated and slated for removal in Python 3.13
+    import imghdr
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:193
+test/rmap/test_rmap_fia_uid.py::test_rmap_rejects_unregistered_identity
+test/rmap/test_rmap_handshake.py::test_rmap_handshake_succeeds
+test/rmap/test_rmap_replay.py::test_rmap_replay_of_message_2_is_rejected
+test/rmap/test_rmap_session_handling.py::test_rmap_rejects_unmatched_server_nonce
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:193: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+    SymmetricKeyAlgorithm.TripleDES: algorithms.TripleDES,
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:200
+test/rmap/test_rmap_fia_uid.py::test_rmap_rejects_unregistered_identity
+test/rmap/test_rmap_handshake.py::test_rmap_handshake_succeeds
+test/rmap/test_rmap_replay.py::test_rmap_replay_of_message_2_is_rejected
+test/rmap/test_rmap_session_handling.py::test_rmap_rejects_unmatched_server_nonce
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:200: CryptographyDeprecationWarning: Camellia has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.Camellia and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 49.0.0.
+    SymmetricKeyAlgorithm.Camellia128: algorithms.Camellia,
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:201
+test/rmap/test_rmap_fia_uid.py::test_rmap_rejects_unregistered_identity
+test/rmap/test_rmap_handshake.py::test_rmap_handshake_succeeds
+test/rmap/test_rmap_replay.py::test_rmap_replay_of_message_2_is_rejected
+test/rmap/test_rmap_session_handling.py::test_rmap_rejects_unmatched_server_nonce
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:201: CryptographyDeprecationWarning: Camellia has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.Camellia and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 49.0.0.
+    SymmetricKeyAlgorithm.Camellia192: algorithms.Camellia,
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:202
+test/rmap/test_rmap_fia_uid.py::test_rmap_rejects_unregistered_identity
+test/rmap/test_rmap_handshake.py::test_rmap_handshake_succeeds
+test/rmap/test_rmap_replay.py::test_rmap_replay_of_message_2_is_rejected
+test/rmap/test_rmap_session_handling.py::test_rmap_rejects_unmatched_server_nonce
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:202: CryptographyDeprecationWarning: Camellia has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.Camellia and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 49.0.0.
+    SymmetricKeyAlgorithm.Camellia256: algorithms.Camellia}
+
+test/rmap/test_rmap_fia_uid.py::test_rmap_rejects_unregistered_identity
+test/rmap/test_rmap_handshake.py::test_rmap_handshake_succeeds
+test/rmap/test_rmap_replay.py::test_rmap_replay_of_message_2_is_rejected
+test/rmap/test_rmap_session_handling.py::test_rmap_rejects_unmatched_server_nonce
+  /usr/local/lib/python3.12/site-packages/pgpy/symenc.py:29: CryptographyDeprecationWarning: CFB has been moved to cryptography.hazmat.decrepit.ciphers.modes.CFB and will be removed from cryptography.hazmat.primitives.ciphers.modes in 49.0.0.
+    encryptor = Cipher(alg.cipher(key), modes.CFB(iv), default_backend()).encryptor()
+
+test/rmap/test_rmap_fia_uid.py::test_rmap_rejects_unregistered_identity
+test/rmap/test_rmap_handshake.py::test_rmap_handshake_succeeds
+test/rmap/test_rmap_replay.py::test_rmap_replay_of_message_2_is_rejected
+test/rmap/test_rmap_session_handling.py::test_rmap_rejects_unmatched_server_nonce
+  /usr/local/lib/python3.12/site-packages/pgpy/symenc.py:50: CryptographyDeprecationWarning: CFB has been moved to cryptography.hazmat.decrepit.ciphers.modes.CFB and will be removed from cryptography.hazmat.primitives.ciphers.modes in 49.0.0.
+    decryptor = Cipher(alg.cipher(key), modes.CFB(iv), default_backend()).decryptor()
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+125 passed, 1 xfailed, 29 warnings in 7.64s

@@ -1,0 +1,19 @@
+Tatou API Fuzzing Campaign
+Group: SoftSec Group 10
+Target: GET /api/get-version/<link>
+Evidence: fuzz_get_version_results.csv, fuzz_results_run1.csv
+
+Campaign summary:
+- 229 requests in the run including the valid positive control.
+- 228 requests in the earlier run without the positive control.
+- No HTTP 5xx responses were observed.
+- Uppercase and trailing-space variants of a valid link returned HTTP 200.
+- Exact link-matching behavior requires further investigation.
+
+Limitations:
+- Results apply only to the inputs and environment tested.
+- No HTTP 5xx responses do not prove the endpoint is secure.
+- The exact link-matching issue remains unresolved.
+
+Note:
+This is a written summary of recorded results, not a raw terminal execution log.
