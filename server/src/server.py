@@ -28,6 +28,9 @@ from watermarking_method import WatermarkingMethod
 
 def create_app():
     app = Flask(__name__)
+    failed_logins = {}
+    failed_login_window = 300
+    failed_login_limit = 3
 
     # --- Config ---
     app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
@@ -170,6 +173,20 @@ def create_app():
             return jsonify({"error": f"database error: {str(e)}"}), 503
 
         if not row or not check_password_hash(row.hpassword, password):
+            now = dt.datetime.now().timestamp()
+            attempts = failed_logins.get(email, [])
+            attempts = [t for t in attempts if now - t < failed_login_window]
+            attempts.append(now)
+            failed_logins[email] = attempts
+
+            app.logger.warning("Failed login attempt for email: %s", email)
+
+            if len(attempts) == failed_login_limit:
+                app.logger.warning(
+                    "Repeated failed logins detected for email: %s (%s attempts in 5 minutes)",
+                    email,
+                    len(attempts),
+                )
             return jsonify({"error": "invalid credentials"}), 401
 
         token = _serializer().dumps({"uid": int(row.id), "login": row.login, "email": row.email})

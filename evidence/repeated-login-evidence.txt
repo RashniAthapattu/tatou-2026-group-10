@@ -1,0 +1,4 @@
+server-1  | [2026-10-15 01:43:04,065] WARNING in server: Failed login attempt for email: repeat-test@example.invalid
+server-1  | [2026-10-15 01:43:04,070] WARNING in server: Failed login attempt for email: repeat-test@example.invalid
+server-1  | [2026-10-15 01:43:04,074] WARNING in server: Failed login attempt for email: repeat-test@example.invalid
+server-1  | [2026-10-15 01:43:04,074] WARNING in server: Repeated failed logins detected for email: repeat-test@example.invalid (3 attempts in 5 minutes)
