@@ -1,0 +1,31 @@
+.....                                                                    [100%]
+=============================== warnings summary ===============================
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:5
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:5: DeprecationWarning: 'imghdr' is deprecated and slated for removal in Python 3.13
+    import imghdr
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:193
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:193: CryptographyDeprecationWarning: TripleDES has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.TripleDES and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 48.0.0.
+    SymmetricKeyAlgorithm.TripleDES: algorithms.TripleDES,
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:200
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:200: CryptographyDeprecationWarning: Camellia has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.Camellia and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 49.0.0.
+    SymmetricKeyAlgorithm.Camellia128: algorithms.Camellia,
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:201
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:201: CryptographyDeprecationWarning: Camellia has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.Camellia and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 49.0.0.
+    SymmetricKeyAlgorithm.Camellia192: algorithms.Camellia,
+
+../usr/local/lib/python3.12/site-packages/pgpy/constants.py:202
+  /usr/local/lib/python3.12/site-packages/pgpy/constants.py:202: CryptographyDeprecationWarning: Camellia has been moved to cryptography.hazmat.decrepit.ciphers.algorithms.Camellia and will be removed from cryptography.hazmat.primitives.ciphers.algorithms in 49.0.0.
+    SymmetricKeyAlgorithm.Camellia256: algorithms.Camellia}
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED test/test_api.py::test_healthz
+PASSED test/test_api.py::test_create_user
+PASSED test/test_api.py::test_login
+PASSED test/test_api.py::test_get_watermarking_methods
+PASSED test/test_api.py::test_list_documents
+5 passed, 5 warnings in 2.71s
