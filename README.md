@@ -135,3 +135,51 @@ python -m mutmut show <mutant-id>
 ```
 
 A surviving mutant means no test failed when that line changed. Read each one and decide whether the tests need a stronger assertion, an edge case, or whether the mutant is equivalent to the original code.
+
+
+### Fuzzing campaign (Specialization A)
+
+The fuzzing campaign targets the `GET /api/get-version/<link>` endpoint. It tests boundary-length inputs, unusual characters, SQL-related strings, encoded path traversal attempts, Unicode, random strings, and invalid links. A valid-link positive control is also used to check expected endpoint behaviour.
+
+**Run the fuzzing campaign**
+
+From the repository root, with the Tatou API and database running:
+
+```bash
+python fuzz_get_version.py
+```
+
+**Run regression tests**
+
+```bash
+python -m pytest server/test/test_get_version_regression.py -v
+```
+
+**Results and evidence**
+
+- `fuzz_get_version_results.csv` — fuzzing results.
+- `fuzz_results_run1.csv` — results from the initial run.
+- `artifacts/hansika/fuzzing/fuzzing_campaign.log` — campaign log.
+- `server/test/test_get_version_regression.py` — non-regression tests.
+
+The accompanying fuzzing report documents the findings, remediation status, and test results. The campaign should only be run against an authorised test instance.
+
+### Operational Security (Specialization D)
+
+The operational security work focused on threat modelling, failed-login monitoring, reducing database port exposure, and incident response following the FLAG_2 incident.
+
+*Security improvements*
+
+- Failed login attempts are recorded in application logs, with a warning generated after three failed attempts for the same email address within five minutes.
+- The database port published through Docker Compose was removed to reduce direct database exposure through a host-published port.
+- A command-injection weakness in the bash-bridge-eof watermarking method was addressed by replacing the shell-based approach with direct Python PDF processing.
+- The FLAG_2 incident was documented, the flag was rotated, and the server was redeployed.
+
+Artifacts and evidence:
+- `docs/operational-security/THREAT_MODEL.md` — threat model.
+- `docs/operational-security/INCIDENT_RECORD.md` — incident investigation and remediation.
+- `evidence/failed-login-evidence.txt` and `evidence/repeated-login-evidence.txt` — login-monitoring evidence.
+- `server/src/server.py` and `docker-compose.yml` — implementation changes.
+
+The login-monitoring tests confirmed that failed attempts were logged and repeated failures generated warnings under the tested conditions. Monitoring does not automatically block accounts or IP addresses.
+
